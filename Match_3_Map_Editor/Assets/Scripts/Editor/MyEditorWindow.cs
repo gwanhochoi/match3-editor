@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using UnityEngine.UIElements;
+using UnityEditor.UIElements;
 
 
 
 public class MyEditorWindow : EditorWindow
 {
 
+    private SceneViewGUIController sceneViewGUIController;
     private static EditorWindow wnd;
 
     [MenuItem("MyTool/MapEditor")]
@@ -19,6 +21,7 @@ public class MyEditorWindow : EditorWindow
 
         wnd.position = new Rect(new Vector2(0, 0),
             new Vector2(Screen.currentResolution.width / 4, Screen.currentResolution.height / 3));
+
     }
 
     [MenuItem("MyTool/MapEditor_ShowUtility")]
@@ -36,23 +39,6 @@ public class MyEditorWindow : EditorWindow
 
         wnd.ShowUtility();
 
-        //Debug.Log("sreen width = " + Screen.currentResolution.width);
-        //Debug.Log("sreen height = " + Screen.currentResolution.height);
-
-
-        //screen size값이 계속 바뀌어서 현재 해상도에 안맞는다.
-        //현재 스크린 윈도우의 사이즈를 구하는 것인지 에디터윈도우 생성시 화면 전체 해상도를 제대로 못읽는것 같다.(지금 생성되는 에디터윈도우의
-        //크기를 읽어오나?)
-        //screen_width = Screen.width;
-        //screen_height = Screen.height;
-
-        //Debug.Log(default_height);
-
-
-        
-        //wnd.minSize = new Vector2(300, 400);
-        //wnd.maxSize = new Vector2(1000, 1200);
-
     }
 
     private void OnEnable()
@@ -65,8 +51,10 @@ public class MyEditorWindow : EditorWindow
     private void OnDisable()
     {
         SceneView.duringSceneGui -= OnSceneGUI;
+        //Debug.Log("disable");
     }
 
+    
     private void CreateGUI()
     {
 
@@ -77,7 +65,7 @@ public class MyEditorWindow : EditorWindow
         //    allObjects.Add(AssetDatabase.LoadAssetAtPath<Sprite>(AssetDatabase.GUIDToAssetPath(guid)));
         //}
 
-        
+        sceneViewGUIController = new SceneViewGUIController();
 
         var Parent_Split_View_horizontal = new TwoPaneSplitView(0, Screen.currentResolution.width / 8,
             TwoPaneSplitViewOrientation.Horizontal);
@@ -90,12 +78,17 @@ public class MyEditorWindow : EditorWindow
         Parent_Split_View_horizontal.Add(right_Pane);
 
         var Left_Pane_Controller = new MyLeftPaneController(150, TwoPaneSplitViewOrientation.Vertical);
-
-
         left_pane.Add(Left_Pane_Controller.Get_PaneSplitView());
 
+        var Right_Pane_Controller = new MyRightPaneController(200, TwoPaneSplitViewOrientation.Vertical);
+        right_Pane.Add(Right_Pane_Controller.Get_PaneSplitView());
+
+        Right_Pane_Controller.Map_Create_Callback = sceneViewGUIController.Create_CustomGrid;
 
         rootVisualElement.Add(Parent_Split_View_horizontal);
+
+        
+
 
     }
 
@@ -103,13 +96,13 @@ public class MyEditorWindow : EditorWindow
     private void OnSceneGUI(SceneView sceneView)
     {
 
+        sceneViewGUIController.DrawGUI();
 
-        Handles.Button(new Vector3(0, 0), Quaternion.identity, 2, 2, Handles.RectangleHandleCap);
+        
+        //Handles.DrawLine(btn.transform.position + Vector3.up, mousePosition);
 
-
-        Handles.BeginGUI();
-        GUILayout.Button("asdfaddf");
-        Handles.EndGUI();
+        //Debug.Log("mouse x = " + mousePosition.x);
+        //Debug.Log("mouse y = " + mousePosition.y);
 
     }
 

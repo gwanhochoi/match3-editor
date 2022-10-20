@@ -98,7 +98,8 @@ public class MyEditorWindow : EditorWindow
 
         sceneViewGUIController.DrawGUI();
 
-        
+
+
         //Handles.DrawLine(btn.transform.position + Vector3.up, mousePosition);
 
         //Debug.Log("mouse x = " + mousePosition.x);
@@ -109,5 +110,7 @@ public class MyEditorWindow : EditorWindow
     private void OnDestroy()
     {
         //Debug.Log("closed");
+        sceneViewGUIController.DestroyObjects();
+
     }
 }

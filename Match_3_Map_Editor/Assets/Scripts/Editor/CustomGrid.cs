@@ -43,7 +43,7 @@ public class CustomGrid
         end_y = -1 * start_y;
 
         int index = 0;
-        for(int i = 0; i < row_dot_count / 2; i++)
+        for (int i = 0; i < row_dot_count / 2; i++)
         {
             m_row_line[index] = new Vector3(start_x, start_y + i * cell_height);
             m_row_line[++index] = new Vector3(end_x, start_y + i * cell_height);
@@ -59,7 +59,7 @@ public class CustomGrid
 
         }
 
-        
+
 
     }
 
@@ -74,20 +74,36 @@ public class CustomGrid
     }
 
 
-    public Vector2 Get_Current_Selected_Tile_Pos(Vector2 mousePos)
+    public Vector2Int Get_Current_Selected_Tile_Pos(Vector2 mousePos)
     {
         //left, bottom (0,0)
         //맵 밖에 있으면 무시
         //좌측하단 좌표 기준으로 cell 사이즈로 계산
 
+        if (mousePos.x < start_x || mousePos.x > end_x
+            || mousePos.y < start_y || mousePos.y > end_y)
+        {
+            return new Vector2Int(-1, -1);
+        }
+
+
         int posx = (int)((mousePos.x - start_x) / m_cell_width);
         int posy = (int)((mousePos.y - start_y) / m_cell_height);
 
-        Debug.Log("tile_pos_x = " + posx);
-        Debug.Log("tile_pos_y = " + posy);
 
-        return new Vector2(posx, posy);
+        //Debug.Log("tile_pos_x = " + posx);
+        //Debug.Log("tile_pos_y = " + posy);
 
 
+        return new Vector2Int(posx, posy);
+
+    }
+
+    public Vector3 Get_CellPos(Vector2 pos)
+    {
+        float x = start_x + m_cell_width * (pos.x + 1 - (1.0f / 2));
+        float y = start_y + m_cell_height * (pos.y + 1 - (1.0f / 2));
+
+        return new Vector3(x, y);
     }
 }

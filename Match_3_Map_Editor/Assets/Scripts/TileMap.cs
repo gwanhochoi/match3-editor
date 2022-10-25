@@ -9,12 +9,11 @@ using UnityEngine.UIElements;
 public class TileMap : MonoBehaviour
 {
 
-    private static int cellWidth_count = 9;
-    private static int cellHeight_count = 9;
+    private int cellWidth_count = 9;
+    private int cellHeight_count = 9;
 
-    private static int cellWidth_Size = 9;
-    private static int cellHeight_Size = 9;
-
+    private int cellWidth_Size = 9;
+    private int cellHeight_Size = 9;
 
     private float start_x;
     private float start_y;
@@ -23,13 +22,31 @@ public class TileMap : MonoBehaviour
 
     private Vector2Int? Selected_Tile_Pos;
 
+    private MapData m_mapData;
+    public MapData mapData
+    {
+        get { return m_mapData; }
+        set { m_mapData = value; }
+    }
+
     private Dictionary<Vector2Int?, GameObject> Map_Tile_Dic = new Dictionary<Vector2Int?, GameObject>();
+
+
+    private void Awake()
+    {
+        cellWidth_count = EditorData.WidthCount;
+        cellHeight_count = EditorData.HeightCount;
+        cellWidth_Size = EditorData.CellWidth;
+        cellHeight_Size = EditorData.CellHeight;
+
+        m_mapData = new MapData(cellWidth_count, cellHeight_count);
+    }
 
 
     private void OnEnable()
     {
-        
         SceneView.duringSceneGui += OnSceneGUI;
+        
     }
 
     private void OnDisable()
@@ -55,8 +72,16 @@ public class TileMap : MonoBehaviour
 
     private void OnSceneGUI(SceneView sceneView)
     {
-        sceneView.in2DMode = true;
+        
 
+        //씬뷰 툴모드 적용 안되게
+        //brush, erase mode
+        if(EditorData.SelectedTool != PaintTool.Default)
+        {
+            sceneView.in2DMode = true;
+            HandleUtility.AddDefaultControl(GUIUtility.GetControlID(FocusType.Passive));
+            HandleUtility.Repaint();
+        }
         
 
         //selected tile draw
@@ -72,32 +97,56 @@ public class TileMap : MonoBehaviour
         {
             switch (Event.current.type)
             {
-                case EventType.MouseDown:
+                case EventType.MouseDown: case EventType.MouseDrag:
 
                     //타일 좌표 가져오기
                     //left bottom 기준 (0,0)
                     Selected_Tile_Pos = Get_CellPos(mousePosition);
-                    if (Selected_Tile_Pos != null)
+
+                    if (Selected_Tile_Pos == null)
+                        break;
+                    switch (EditorData.SelectedTool)
                     {
-
-                        //맵에디터에서 선택한 타일을 씬뷰에 생성하자
-                        Create_Tile();
+                        
+                        case PaintTool.Brush:
+                            //맵에디터에서 선택한 타일을 씬뷰에 생성하자
+                            Create_Tile();
+                            
+                            break;
+                        case PaintTool.Erase:
+                            EraseTile();
+                            break;
                     }
-
-
+                    
                     break;
             }
         }
 
     }
 
+    private void EraseTile()
+    {
+        if (!Map_Tile_Dic.ContainsKey(Selected_Tile_Pos.Value))
+            return;
+
+        var temp = Map_Tile_Dic[Selected_Tile_Pos.Value];
+        Map_Tile_Dic.Remove(Selected_Tile_Pos.Value);
+        DestroyImmediate(temp);
+    }
+
     private void Create_Tile()
     {
 
         //같은곳 선택하면 기존꺼는 지우고 새로 생성
-
         if (Map_Tile_Dic.ContainsKey(Selected_Tile_Pos.Value))
         {
+            //같은곳에 똑같은 타일 있으면 무시
+            if(EditorData.Selected_Tile.name == Map_Tile_Dic[Selected_Tile_Pos.Value].name)
+            {
+                //Debug.Log("Same");
+                return;
+            }
+
             //delete
             var temp = Map_Tile_Dic[Selected_Tile_Pos.Value];
 
@@ -115,7 +164,19 @@ public class TileMap : MonoBehaviour
             obj.transform.position = Get_CellCenterPos(Selected_Tile_Pos);
 
             Map_Tile_Dic[Selected_Tile_Pos.Value] = obj;
+            
         }
+    }
+
+    public MapData Get_Mapdata()
+    {
+        mapData.ClearMapData();
+        foreach(var child in Map_Tile_Dic)
+        {
+            mapData.Add_CellData(child.Key.Value.x, child.Key.Value.y, child.Value.name);
+        }
+
+        return mapData;
     }
 
     //draw grid view
